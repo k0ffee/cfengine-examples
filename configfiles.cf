@@ -1,0 +1,183 @@
+bundle agent configfiles
+{
+    vars:
+        freebsd::
+            "prefix" string => "/usr/local";
+        debian::
+            "prefix" string => "";
+
+        #
+        # Some NTP:
+        #
+        any::
+            "ntp_server" slist => {
+                "server tools-1-b iburst",
+                "server tools-2-b iburst"
+        };
+
+        #
+        # Some Munin:
+        #
+        any::
+            "visiblename" string => "$(sys.uqhost)";
+        munin_1_storage_1_b|munin_2_storage_1_b::
+            "visiblename" string => "storage-1-b";
+        munin_1_storage_2_b|munin_2_storage_2_b::
+            "visiblename" string => "storage-2-b";
+
+    files:
+        any::
+            "/etc/ssh/ssh_known_hosts"
+                perms => mo("644","root"),
+                copy_from => secure_cp (
+                    "/cf-public/etcfiles/ssh_known_hosts",
+                    "$(sys.policy_hub)"
+                );
+
+            "$(prefix)/etc/munin/munin-node.conf"
+                perms => mo("644","root"),
+                edit_template =>
+                    "${sys.workdir}/inputs/templates/munin-node.mustache",
+                create => "true",
+                template_method => "mustache",
+                template_data => parsejson('{"hostname": "$(sys.uqhost)",
+                    "visiblename": "$(visiblename)"}'),
+                classes => if_repaired("restart_munin_node");
+
+            "$(prefix)/etc/sudoers.d/sudoers"
+                perms => mo("600","root"),
+                copy_from => secure_cp (
+                    "/cf-public/etcfiles/sudoers",
+                    "$(sys.policy_hub)"
+                );
+
+            "$(prefix)/etc/ssmtp/ssmtp.conf"
+                perms => mo("644","root"),
+                edit_template =>
+                    "${sys.workdir}/inputs/templates/ssmtp.mustache",
+                create => "true",
+                template_method => "mustache",
+                template_data => parsejson('{"hostname": "$(sys.uqhost)"}');
+
+        non_virtual_iron.!tools::
+            #
+            # Not on tools-1-b and tools-2-b, the acting NTP-gateways.
+            #
+            "/etc/ntp.conf"
+                perms => mo("644","root"),
+                edit_line => comment_lines_matching (
+                    "\s*server\s+(?!tools-(1|2)-b)\b.*",
+                    "#"
+                ),
+                classes => if_repaired("restart_ntpd");
+
+            "/etc/ntp.conf"
+                perms => mo("644","root"),
+                edit_line => append_if_no_lines (
+                    "@{configfiles.ntp_server}"
+                ),
+                classes => if_repaired("restart_ntpd");
+
+        any::
+            "/etc/ntp.conf.cf.*"
+                delete => tidy;  # Cosmetics, not important.
+
+        freebsd.!(mail_1_b|mail_2_b|nagios_1_b|nagios_2_b)::
+            #
+            # FreeBSD systems running ssmtp.
+            #
+            "/etc/mail/mailer.conf"
+                perms => mo("644","root"),
+                copy_from => secure_cp (
+                    "/cf-public/etcfiles/mailer.conf",
+                    "$(sys.policy_hub)"
+                );
+
+        mail_1_b|mail_2_b|nagios_1_b|nagios_2_b::
+            #
+            # FreeBSD systems running qmail.
+            #
+            "/etc/mail/mailer.conf"
+                perms => mo("644","root"),
+                copy_from => secure_cp (
+                    "/cf-public/etcfiles/mailer.conf-qmail",
+                    "$(sys.policy_hub)"
+                );
+
+        munin::
+            "/usr/local/etc/munin/munin.conf"
+                perms => mo("644","root"),
+                copy_from => secure_cp (
+                    "/cf-public/munin/munin.conf",
+                    "$(sys.policy_hub)"
+                );
+
+        freebsd::
+            "/usr/local/etc/nrpe.cfg"
+                perms => mo("644","root"),
+                edit_template =>
+                    "${sys.workdir}/inputs/templates/nrpe-freebsd.mustache",
+                create => "true",
+                template_method => "mustache",
+                template_data => parsejson('{"hostname": "$(sys.uqhost)"}'),
+                classes => if_repaired("restart_nrpe");
+
+        debian::
+            "/etc/nagios/nrpe.cfg"
+                perms => mo("644","root"),
+                edit_template =>
+                    "${sys.workdir}/inputs/templates/nrpe-debian.mustache",
+                create => "true",
+                template_method => "mustache",
+                template_data => parsejson('{"hostname": "$(sys.uqhost)"}'),
+                classes => if_repaired("restart_nrpe");
+
+        !webnodes::
+            "/etc/hosts"
+                perms => mo("644","root"),
+                copy_from => secure_cp (
+                    "/cf-public/etcfiles/hosts",
+                    "$(sys.policy_hub)"
+                );
+
+        webnodes::
+            "/etc/hosts"
+                perms => mo("644","root"),
+                copy_from => secure_cp (
+                    "/cf-public/etcfiles/hosts-webnodes",
+                    "$(sys.policy_hub)"
+                );
+
+            "/etc/fstab"
+                perms => mo("644","root"),
+                copy_from => secure_cp (
+                    "/cf-public/etcfiles/fstab-webnodes",
+                    "$(sys.policy_hub)"
+                );
+
+            "/etc/idmapd.conf"
+                perms => mo("644","root"),
+                copy_from => secure_cp (
+                    "/cf-public/etcfiles/idmapd.conf-webnodes",
+                    "$(sys.policy_hub)"
+                );
+
+    commands:
+        freebsd.restart_ntpd.!no_restarts::
+            "/usr/sbin/service ntpd restart";
+
+        debian.restart_ntpd.!no_restarts::
+            "/usr/sbin/service ntp restart";
+
+        restart_munin_node.!no_restarts::
+            "/usr/sbin/service munin-node restart";
+
+        freebsd.restart_nrpe.!no_restarts::
+            "/usr/sbin/service nrpe2 restart";
+
+        debian.restart_nrpe.!no_restarts::
+            "/usr/sbin/service nagios-nrpe-server restart";
+
+        webnodes.!no_restarts::
+            "/bin/mount -a";
+}

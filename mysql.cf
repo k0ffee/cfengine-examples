@@ -1,0 +1,94 @@
+bundle agent mysql
+{
+    files:
+        (db_api|db_other|db_ml|db_bi)::
+            "/usr/local/etc/mysql/my.cnf"
+                copy_from => secure_cp (
+                    "/cf-public/mysql/$(sys.uqhost).my.cnf", "$(sys.policy_hub)"
+                ),
+                perms => mog("644", "root", "wheel");
+
+        #
+        # Mysql-HAproxy-test:
+        #
+
+        db_api::
+            "/service/mysql-test/Makefile"
+                copy_from => secure_cp (
+                    "/cf-private/mysql-test/Makefile",
+                    "$(sys.policy_hub)"
+                ),
+                perms => mog("644", "root", "wheel"),
+                classes => if_repaired("reload_mysql_test");
+
+            "/service/mysql-test/mysql-test.c"
+                copy_from => secure_cp (
+                    "/cf-private/mysql-test/$(sys.uqhost).mysql-test.c",
+                    "$(sys.policy_hub)"
+                ),
+                perms => mog("600", "root", "wheel"),
+                classes => if_repaired("reload_mysql_test");
+
+        #
+        # Munin:
+        #
+
+        db_api|db_other|db_ml|db_bi|db_test::
+            "/usr/local/etc/munin/plugins/mysql_"
+                copy_from => secure_cp (
+                    "/cf-public/munin/mysql/mysql",
+                    "$(sys.policy_hub)"
+                ),
+                perms => mo("755", "root"),
+                classes => if_repaired("reload_munin_node");
+
+            "/usr/local/etc/munin/plugins/.*.cfsaved"
+                delete => tidy;
+
+            "/usr/local/etc/munin/plugin-conf.d/mysql.conf"
+                copy_from => secure_cp (
+                    "/cf-private/munin/mysql.conf",
+                    "$(sys.policy_hub)"
+                ),
+                perms => mo("600", "root"),
+                classes => if_repaired("reload_munin_node");
+
+            "/usr/local/etc/munin/plugin-conf.d/.*.cfsaved"
+                delete => tidy;
+
+            "/usr/local/lib/perl5/site_perl/Munin/MySQL/Graph/CacheEfficiency.pm"
+                copy_from => secure_cp (
+                    "/cf-public/munin/mysql/CacheEfficiency.pm",
+                    "$(sys.policy_hub)"
+                ),
+                perms => mo("644", "root");
+
+            "/usr/local/lib/perl5/site_perl/Munin/MySQL/Graph/InnoDB.pm"
+                copy_from => secure_cp (
+                    "/cf-public/munin/mysql/InnoDB.pm",
+                    "$(sys.policy_hub)"
+                ),
+                perms => mo("644", "root");
+
+            "/usr/local/lib/perl5/site_perl/Munin/MySQL/Graph/ReplicationSlave.pm"
+                copy_from => secure_cp (
+                    "/cf-public/munin/mysql/ReplicationSlave.pm",
+                    "$(sys.policy_hub)"
+                ),
+                perms => mo("644", "root");
+
+            "/usr/local/lib/perl5/site_perl/Munin/MySQL/Graph/Standard.pm"
+                copy_from => secure_cp (
+                    "/cf-public/munin/mysql/Standard.pm",
+                    "$(sys.policy_hub)"
+                ),
+                perms => mo("644", "root");
+
+    commands:
+        reload_mysql_test.!no_restarts::
+            "/usr/bin/make -C /service/mysql-test";
+            "/usr/local/bin/svc -t /service/mysql-test";
+
+        reload_munin_node.!no_restarts::
+            "/usr/sbin/service munin-node restart";
+}

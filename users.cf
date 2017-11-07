@@ -1,0 +1,170 @@
+bundle agent users
+{
+    vars:
+        any::
+            #
+            # Groups to add:
+            #
+
+            "group[admins][gid]"      string => "5000";
+            "group[developers][gid]"  string => "5001";
+
+            #
+            # Users to add:
+            #
+
+            "user[tino.reinhardt][uid]"    string => "5010";
+            "user[tino.reinhardt][group]"  string => "admins";
+            "user[tino.reinhardt][shell]"  string => "zsh";
+
+            #
+            # Users to modify:
+            #
+
+            #"moduser[tino.reinhardt][uid]"    string => "5014";
+            #"moduser[tino.reinhardt][group]"  string => "admins";
+            #"moduser[tino.reinhardt][shell]"  string => "zsh";
+
+            #
+            # Users to delete:
+            #
+
+            #"nouser[knarf][uid]"  string => "9000";
+
+        webnodes::
+            "group[deploy][gid]"   string => "1001";
+            "group[app][gid]"      string => "1002";
+
+            "user[deploy][uid]"    string => "1001";
+            "user[deploy][group]"  string => "Deploy user";
+            "user[deploy][shell]"  string => "sh";
+
+            "user[app][uid]"       string => "1002";
+            "user[app][group]"     string => "App user";
+            "user[app][shell]"     string => "sh";
+
+        git_1_b::
+            "group[git][gid]"      string => "965";
+
+            "user[git][uid]"       string => "965";
+            "user[git][group]"     string => "git";
+            "user[git][shell]"     string => "zsh";
+
+    files:
+        "/root/.ssh/authorized_keys"
+            perms => mo("644","root"),
+            copy_from => secure_cp (
+                "/cf-public/users/root/authorized_keys",
+                "$(sys.policy_hub)"
+            );
+
+        "/root/.ssh/authorized_keys2"
+            delete => tidy;
+
+    methods:
+        "group"   usebundle => create_group("users.group");
+        "user"    usebundle => create_user("users.user");
+        "ssh"     usebundle => enable_ssh("users.user");
+        "moduser" usebundle => modify_user("users.moduser");
+        "nouser"  usebundle => disable_user("users.nouser");
+}
+
+bundle agent create_group(groups)
+{
+    vars:
+        "group" slist => getindices("$(groups)");
+
+    classes:
+        "add_$(group)" not => groupexists("$(group)");
+
+    commands:
+        freebsd::
+            "/usr/sbin/pw groupadd $(group) -g $($(groups)[$(group)][gid])"
+                ifvarclass => canonify("add_$(group)");
+        debian::
+            "/usr/sbin/groupadd -g $($(groups)[$(group)][gid]) $(group)"
+                ifvarclass => canonify("add_$(group)");
+}
+
+bundle agent create_user(users)
+{
+    vars:
+        "user" slist => getindices("$(users)");
+
+    classes:
+        "add_$(user)" not => userexists("$(user)");
+
+    commands:
+        freebsd::
+            "/usr/sbin/pw useradd $(user) -c ''
+                -u $($(users)[$(user)][uid])
+                -g $($(users)[$(user)][group])
+                -s /usr/local/bin/$($(users)[$(user)][shell])"
+            ifvarclass => canonify("add_$(user)");
+
+        debian::
+            "/usr/sbin/useradd -c ''
+                -u $($(users)[$(user)][uid])
+                -g $($(users)[$(user)][group])
+                -s /bin/$($(users)[$(user)][shell]) $(user)"
+            ifvarclass => canonify("add_$(user)");
+}
+
+bundle agent modify_user(users)
+{
+    vars:
+        "user" slist => getindices("$(users)");
+
+    commands:
+        freebsd::
+            "/usr/sbin/pw usermod $(user) -c ''
+                -u $($(users)[$(user)][uid])
+                -g $($(users)[$(user)][group])
+                -s /usr/local/bin/$($(users)[$(user)][shell])"
+            if => userexists("$(user)");
+        debian::
+            "/usr/sbin/usermod -c ''
+                -u $($(users)[$(user)][uid])
+                -g $($(users)[$(user)][group])
+                -s /bin/$($(users)[$(user)][shell]) $(user)"
+            if => userexists("$(user)");
+}
+
+bundle agent enable_ssh(users)
+{
+    vars:
+        "user" slist => getindices("$(users)");
+
+    files:
+        "/home/$(user)/."
+            perms => mog("700","$(user)", "$($(users)[$(user)][group])"),
+            create => "true";
+        "/home/$(user)/.ssh/."
+            perms => mog("700","$(user)", "$($(users)[$(user)][group])"),
+            create => "true";
+        "/home/$(user)/.ssh/authorized_keys"
+            perms => mog("600","$(user)", "$($(users)[$(user)][group])"),
+            copy_from => secure_cp (
+                 "/cf-public/users/$(user)/authorized_keys",
+                 "$(sys.policy_hub)"
+            );
+        "/home/$(user)/.ssh/authorized_keys2"
+            delete => tidy;
+}
+
+bundle agent disable_user(names)
+{
+    vars:
+        "user" slist => getindices("$(names)");
+
+    classes:
+        "disable_$(user)" if => userexists("$(user)");
+
+    commands:
+        freebsd::
+            "/usr/sbin/pw userdel $(user) -r"
+                ifvarclass => canonify("disable_$(user)");
+        debian::
+            "/usr/sbin/userdel -r $(user)"
+                ifvarclass => canonify("disable_$(user)");
+}

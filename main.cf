@@ -1,0 +1,17 @@
+bundle agent main
+{
+    methods:
+        # Activate your custom policies here
+    reports:
+}
+
+body copy_from mycopy(from,server)
+{
+    source      => "$(from)";
+    servers     => { "$(server)" };
+    compare     => "digest";
+    verify      => "true";
+    copy_backup => "false";
+    trustkey    => "false";
+    purge       => "true";
+}

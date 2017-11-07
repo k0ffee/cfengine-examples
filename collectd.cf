@@ -1,0 +1,209 @@
+bundle agent collectd
+{
+    files:
+        freebsd.!collectd_1_b.!collectd_2_b::
+            "/usr/local/etc/collectd.conf"
+                copy_from => secure_cp (
+                    "/cf-public/collectd/collectd.conf", "$(sys.policy_hub)"
+                ),
+                perms => mo("644", "root"),
+                classes => if_repaired("restart_collectd");
+
+            "/usr/local/lib/collectd/df.so"
+                copy_from => secure_cp (
+                    "/cf-public/collectd/df_zfs.so", "$(sys.policy_hub)"
+                ),
+                perms => mo("755", "root"),
+                classes => if_repaired("restart_collectd");
+
+        collectd_1_b::
+            "/usr/local/etc/collectd.conf"
+                copy_from => secure_cp (
+                    "/cf-public/collectd/collectd.conf-collectd-1-b",
+                    "$(sys.policy_hub)"
+                ),
+                perms => mo("644", "root"),
+                classes => if_repaired("restart_collectd");
+
+        collectd_2_b::
+            "/usr/local/etc/collectd.conf"
+                copy_from => secure_cp (
+                    "/cf-public/collectd/collectd.conf-collectd-2-b",
+                    "$(sys.policy_hub)"
+                ),
+                perms => mo("644", "root"),
+                classes => if_repaired("restart_collectd");
+
+        gateway::
+            "/usr/local/etc/collectd/gateway.conf"
+                copy_from => secure_cp (
+                    "/cf-public/collectd/gateway.conf", "$(sys.policy_hub)"
+                ),
+                perms => mo("644", "root"),
+                classes => if_repaired("restart_collectd");
+
+        gw_nginx::
+            "/usr/local/etc/collectd/nginx.conf"
+                copy_from => secure_cp (
+                    "/cf-public/collectd/nginx.conf", "$(sys.policy_hub)"
+                ),
+                perms => mo("644", "root"),
+                classes => if_repaired("restart_collectd");
+
+        db_api|db_other|db_ml|db_bi|db_binlog::
+            "/usr/local/etc/collectd/database.conf"
+                copy_from => secure_cp (
+                    "/cf-public/collectd/database.conf", "$(sys.policy_hub)"
+                ),
+                perms => mo("644", "root"),
+                classes => if_repaired("restart_collectd");
+
+        db_api|db_bi|db_binlog::
+            "/usr/local/etc/collectd/database-api.conf"
+                copy_from => secure_cp (
+                    "/cf-private/collectd/database-api.conf",
+                    "$(sys.policy_hub)"
+                ),
+                perms => mo("644", "root"),
+                classes => if_repaired("restart_collectd");
+
+        db_other::
+            "/usr/local/etc/collectd/database-other.conf"
+                copy_from => secure_cp (
+                    "/cf-private/collectd/database-other.conf",
+                    "$(sys.policy_hub)"
+                ),
+                perms => mo("644", "root"),
+                classes => if_repaired("restart_collectd");
+
+        db_ml::
+            "/usr/local/etc/collectd/database-ml.conf"
+                copy_from => secure_cp (
+                    "/cf-private/collectd/database-ml.conf",
+                    "$(sys.policy_hub)"
+                ),
+                perms => mo("644", "root"),
+                classes => if_repaired("restart_collectd");
+
+        tools|mail|graylog_es|graylog::
+            "/usr/local/etc/collectd/tools.conf"
+                copy_from => secure_cp (
+                    "/cf-public/collectd/tools.conf", "$(sys.policy_hub)"
+                ),
+                perms => mo("644", "root"),
+                classes => if_repaired("restart_collectd");
+
+        nodes|elastic|proxy|rabbit|redis|riak|zoo::
+            "/usr/local/etc/collectd/nodes.conf"
+                copy_from => secure_cp (
+                    "/cf-public/collectd/nodes.conf", "$(sys.policy_hub)"
+                ),
+                perms => mo("644", "root"),
+                classes => if_repaired("restart_collectd");
+
+        elastic|proxy|rabbit|redis::
+            "/usr/local/sbin/exec-munin"
+                copy_from => secure_cp (
+                    "/cf-public/collectd/exec-munin", "$(sys.policy_hub)"
+                ),
+                perms => mo("755", "root"),
+                classes => if_repaired("restart_collectd");
+
+        elastic|proxy|redis::
+            "/usr/local/etc/collectd/plugin-exec.conf"
+                copy_from => secure_cp (
+                    "/cf-public/collectd/plugin-exec.conf",
+                    "$(sys.policy_hub)"
+                ),
+                perms => mo("644", "root"),
+                classes => if_repaired("restart_collectd");
+
+        rabbit::
+            "/usr/local/etc/collectd/plugin-exec-rabbitmq.conf"
+                copy_from => secure_cp (
+                    "/cf-public/collectd/plugin-exec-rabbitmq.conf",
+                    "$(sys.policy_hub)"
+                ),
+                perms => mo("644", "root"),
+                classes => if_repaired("restart_collectd");
+
+        elastic::
+            "/usr/local/etc/exec-munin.conf"
+                copy_from => secure_cp (
+                    "/cf-public/collectd/exec-munin.conf-elasticsearch",
+                    "$(sys.policy_hub)"
+                ),
+                perms => mo("644", "root"),
+                classes => if_repaired("restart_collectd");
+
+        proxy::
+            "/usr/local/etc/exec-munin.conf"
+                copy_from => secure_cp (
+                    "/cf-public/collectd/exec-munin.conf-haproxy",
+                    "$(sys.policy_hub)"
+                ),
+                perms => mo("644", "root"),
+                classes => if_repaired("restart_collectd");
+
+        rabbit::
+            "/usr/local/etc/exec-munin.conf"
+                copy_from => secure_cp (
+                    "/cf-public/collectd/exec-munin.conf-rabbitmq",
+                    "$(sys.policy_hub)"
+                ),
+                perms => mo("644", "root"),
+                classes => if_repaired("restart_collectd");
+
+        redis::
+            "/usr/local/etc/exec-munin.conf"
+                copy_from => secure_cp (
+                    "/cf-public/collectd/exec-munin.conf-redis",
+                    "$(sys.policy_hub)"
+                ),
+                perms => mo("644", "root"),
+                classes => if_repaired("restart_collectd");
+
+        storage_3_b::
+            "/usr/local/etc/collectd/storage.conf"
+                copy_from => secure_cp (
+                    "/cf-public/collectd/storage.conf", "$(sys.policy_hub)"
+                ),
+                perms => mo("644", "root"),
+                classes => if_repaired("restart_collectd");
+
+        debian::
+            "/etc/collectd/collectd.conf"
+                copy_from => secure_cp (
+                    "/cf-public/collectd/collectd.conf-debian",
+                    "$(sys.policy_hub)"
+                ),
+                perms => mo("644", "root"),
+                classes => if_repaired("restart_collectd");
+
+        collectd_1_b|collectd_2_b::
+            "/usr/local/etc/nginx/nginx.conf"
+                copy_from => secure_cp (
+                    "/cf-public/collectd/graph-panel/nginx.conf",
+                    "$(sys.policy_hub)"
+                ),
+                perms => mo("644", "root"),
+                classes => if_repaired("reload_nginx");
+
+            "/usr/local/www/conf/config.php"
+                copy_from => secure_cp (
+                    "/cf-public/collectd/graph-panel/config.php",
+                    "$(sys.policy_hub)"
+                ),
+                perms => mo("644", "root"),
+                classes => if_repaired("restart_phpfpm");
+
+    commands:
+        restart_collectd.!no_restarts::
+           "/usr/sbin/service collectd restart";
+
+        reload_nginx.!no_restarts::
+           "/usr/sbin/service nginx reload";
+
+        restart_phpfpm.!no_restarts::
+           "/usr/sbin/service php-fpm restart";
+}

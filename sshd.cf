@@ -1,0 +1,27 @@
+bundle agent sshd {
+    vars:
+        any::
+            "sshd[PermitRootLogin]" string => "without-password";
+
+        freebsd::
+            "sshd[UsePAM]"          string => "no";
+            "sshd[UseDNS]"          string => "no";
+
+    files:
+        any::
+            "/etc/ssh/sshd_config"
+                create    => "true",
+                edit_line => set_config_values("sshd.sshd"),
+                classes   => if_repaired("reload_sshd_config");
+
+    commands:
+        !gateway.reload_sshd_config::
+            #
+            # !gateway:
+            #
+            # Don't risk locking yourself out of the gateway nodes.
+            # Reloading sshd_config config must be done manual there,
+            # one node after the other.
+            #
+            "/usr/sbin/service sshd reload";
+}

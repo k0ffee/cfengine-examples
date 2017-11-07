@@ -1,0 +1,43 @@
+bundle agent haproxy
+{
+    vars:
+        "config" slist => { "api_rw", "api_search_ro",
+                            "api_slow_ro", "other" };
+
+    files:
+        proxy::
+            "/usr/local/etc/haproxy-api_ro.conf.*"
+                delete => tidy;
+
+            "/usr/local/etc/haproxy-$(config).conf"
+                copy_from => secure_cp (
+                    "/cf-public/haproxy/haproxy-$(config).conf",
+                    "$(sys.policy_hub)"
+                ),
+                perms => mo("644", "root"),
+                classes => if_repaired("reload_haproxy");
+
+            "/usr/local/etc/monitrc"
+                copy_from => secure_cp (
+                    "/cf-public/haproxy/monitrc",
+                    "$(sys.policy_hub)"
+                ),
+                perms => mog("600", "root", "wheel"),
+                classes => if_repaired("reload_monit");
+
+        webnodes::
+            "/etc/haproxy/haproxy.cfg"
+                copy_from => secure_cp (
+                    "/cf-public/haproxy/haproxy.cfg-webnodes",
+                    "$(sys.policy_hub)"
+                ),
+                perms => mo("644", "root"),
+                classes => if_repaired("reload_haproxy");
+
+    commands:
+        reload_haproxy!no_restarts::
+            "/usr/sbin/service haproxy reload";
+
+        reload_monit!no_restarts::
+            "/usr/sbin/service monit reload";
+}

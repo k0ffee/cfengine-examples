@@ -1,0 +1,101 @@
+bundle agent nagios
+{
+    files:
+        nagios::
+            "/usr/local/etc/nagios/objects"
+                copy_from => mycopy (
+                    "/cf-public/nagios/objects", "$(sys.policy_hub)"
+                ),
+                perms => mo("644", "root"),
+                depth_search => recurse("inf"),
+                classes => if_repaired("reload_nagios");
+
+            "/usr/local/etc/nagios/cgi.cfg"
+                copy_from => secure_cp (
+                    "/cf-public/nagios/cgi.cfg", "$(sys.policy_hub)"
+                ),
+                perms => mo("644", "root"),
+                classes => if_repaired("reload_nagios");
+
+            "/usr/local/etc/nagios/nagios.cfg"
+                copy_from => secure_cp (
+                    "/cf-public/nagios/nagios.cfg", "$(sys.policy_hub)"
+                ),
+                perms => mo("644", "root"),
+                classes => if_repaired("reload_nagios");
+
+        nagios_1_b::
+            "/usr/local/etc/nagios/resource.cfg"
+                copy_from => secure_cp (
+                    "/cf-private/nagios/resource.cfg-nagios-1-b",
+                    "$(sys.policy_hub)"
+                ),
+                perms => mog("640", "root", "nagios"),
+                classes => if_repaired("reload_nagios");
+
+        nagios_2_b::
+            "/usr/local/etc/nagios/resource.cfg"
+                copy_from => secure_cp (
+                    "/cf-private/nagios/resource.cfg-nagios-2-b",
+                    "$(sys.policy_hub)"
+                ),
+                perms => mog("640", "root", "nagios"),
+                classes => if_repaired("reload_nagios");
+
+            #
+            # Plugins:
+            #
+
+        nagios::
+            "/usr/local/libexec/nagios/local"
+                copy_from => mycopy (
+                    "/cf-public/nagios/plugins", "$(sys.policy_hub)"
+                ),
+                perms => mo("755", "root"),
+                depth_search => recurse("inf");
+
+        freebsd.!nagios::
+            "/usr/local/libexec/nagios/local/check_df"
+                copy_from => secure_cp (
+                    "/cf-public/nagios/plugins/check_df", "$(sys.policy_hub)"
+                ),
+                perms => mo("755", "root");
+
+            "/usr/local/libexec/nagios/local/check_zpool"
+                copy_from => secure_cp (
+                    "/cf-public/nagios/plugins/check_zpool", "$(sys.policy_hub)"
+                ),
+                perms => mo("755", "root");
+
+            "/usr/local/libexec/nagios/local/check_lacp"
+                copy_from => secure_cp (
+                    "/cf-public/nagios/plugins/check_lacp", "$(sys.policy_hub)"
+                ),
+                perms => mo("755", "root");
+
+            "/usr/local/libexec/nagios/local/check_carp_state"
+                copy_from => secure_cp (
+                    "/cf-public/nagios/plugins/check_carp_state",
+                    "$(sys.policy_hub)"
+                ),
+                perms => mo("755", "root");
+
+        redis::
+            "/usr/local/libexec/nagios/local/check_redis_balance"
+                copy_from => secure_cp (
+                    "/cf-public/nagios/plugins/check_redis_balance",
+                        "$(sys.policy_hub)"
+                ),
+                perms => mo("755", "root");
+
+        debian_lxc::
+            "/usr/lib/nagios/plugins/local/check_lacp"
+                copy_from => secure_cp (
+                    "/cf-public/nagios/plugins/check_lacp", "$(sys.policy_hub)"
+                ),
+                perms => mo("755", "root");
+
+    commands:
+        reload_nagios.!no_restarts::
+           "/usr/sbin/service nagios reload";
+}

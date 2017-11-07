@@ -1,0 +1,33 @@
+bundle common classes
+{
+    classes:
+        "gateway"    or => { classmatch("gw_[1-4]_b") };
+        "gw_nginx"   or => { classmatch("nginx_[1-4]_b") };
+        "nagios"     or => { classmatch("nagios_[1-2]_b") };
+        "munin"      or => { classmatch("munin_[1-2]_b") };
+        "mail"       or => { classmatch("mail_[1-2]_b") };
+        "db_api"     or => { classmatch("db_[1-4]_b") };
+        "db_other"   or => { classmatch("db_[6-8]_b") };
+        "db_ml"      or => { classmatch("db_(9|10)_b") };
+        "db_bi"      or => { classmatch("db_(11|12)_b") };
+        "db_binlog"  or => { classmatch("db_(13|14)_b") };
+        "db_test"    or => { classmatch("db_(5|16)_b") };
+        "nodes"      or => { classmatch("n_[1-3]_b") };
+        "proxy"      or => { classmatch("proxy_[1-3]_b") };
+        "elastic"    or => { classmatch("es_[1-3]_b") };
+        "rabbit"     or => { classmatch("rabbit_[1-6]_b") };
+        "redis"      or => { classmatch("redis_[1-3]_b") };
+        "riak"       or => { classmatch("riak_[1-3]_b") };
+        "zoo"        or => { classmatch("zoo_[1-3]_b") };
+        "tools"      or => { classmatch("tools_[1-2]_b") };
+        "graylog"    or => { classmatch("graylog_[1-2]_b") };
+        "graylog_es" or => { classmatch("graylog_es_[1-2]_b") };
+        "debian_lxc" or => { classmatch("n_[4-9]_b"),
+                             classmatch("n_1[0-2]_b") };
+        "webnodes"   or => { classmatch("web_[1-9][0-9]*_b") };
+
+        "non_virtual_iron" or => { "gateway", "db_api", "db_ml", "tools",
+                                   classmatch("n_[1-3]_b"), "storage_3_b",
+                                   "debian_lxc"
+        };
+}
