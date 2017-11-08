@@ -5,7 +5,7 @@ bundle agent main
     reports:
 }
 
-body copy_from mycopy(from,server)
+body copy_from purgecopy(from,server)
 {
     source      => "$(from)";
     servers     => { "$(server)" };

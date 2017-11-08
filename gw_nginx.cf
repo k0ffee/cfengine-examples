@@ -3,35 +3,35 @@ bundle agent gw_nginx
     files:
         gw_nginx::
             "/usr/local/etc/nginx"
-                copy_from => mycopy (
+                copy_from => purgecopy (
                     "/cf-public/gw-nginx", "$(sys.policy_hub)"
                 ),
                 perms => mog("644", "root", "wheel"),
                 depth_search => recurse("1");
 
             "/usr/local/etc/nginx/conf.d"
-                copy_from => mycopy (
+                copy_from => purgecopy (
                     "/cf-public/gw-nginx/conf.d", "$(sys.policy_hub)"
                 ),
                 perms => mog("644", "root", "wheel"),
                 depth_search => recurse("1");
 
             "/usr/local/etc/nginx/vhost"
-                copy_from => mycopy (
+                copy_from => purgecopy (
                     "/cf-public/gw-nginx/vhost", "$(sys.policy_hub)"
                 ),
                 perms => mog("644", "root", "wheel"),
                 depth_search => recurse("1");
 
             "/usr/local/etc/nginx/private/ssl"
-                copy_from => mycopy (
+                copy_from => purgecopy (
                     "/cf-private/gw-nginx/ssl", "$(sys.policy_hub)"
                 ),
                 perms => mog("600", "root", "wheel"),
                 depth_search => recurse("inf");
 
             "/usr/local/etc/nginx/private/passwd"
-                copy_from => mycopy (
+                copy_from => purgecopy (
                     "/cf-private/gw-nginx/passwd", "$(sys.policy_hub)"
                 ),
                 perms => mog("640", "root", "www"),

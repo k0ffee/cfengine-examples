@@ -3,7 +3,7 @@ bundle agent nagios
     files:
         nagios::
             "/usr/local/etc/nagios/objects"
-                copy_from => mycopy (
+                copy_from => purgecopy (
                     "/cf-public/nagios/objects", "$(sys.policy_hub)"
                 ),
                 perms => mo("644", "root"),
@@ -48,7 +48,7 @@ bundle agent nagios
 
         nagios::
             "/usr/local/libexec/nagios/local"
-                copy_from => mycopy (
+                copy_from => purgecopy (
                     "/cf-public/nagios/plugins", "$(sys.policy_hub)"
                 ),
                 perms => mo("755", "root"),
