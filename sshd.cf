@@ -20,7 +20,7 @@ bundle agent sshd {
             # !gateway.!tools:
             #
             # Don't risk locking yourself out of the gateway nodes.
-            # Reloading sshd_config config must be done manual there,
+            # Reloading sshd_config config must be done manually there,
             # one node after the other.
             #
             "/usr/sbin/service sshd reload";
