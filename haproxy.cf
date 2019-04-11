@@ -5,7 +5,7 @@ bundle agent haproxy
                             "api_slow_ro", "other" };
 
     files:
-        proxy::
+        haproxy::
             "/usr/local/etc/haproxy-api_ro.conf.*"
                 delete => tidy;
 

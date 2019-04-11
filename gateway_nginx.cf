@@ -1,7 +1,7 @@
-bundle agent gw_nginx
+bundle agent gateway_nginx
 {
     files:
-        gw_nginx::
+        gateway_nginx::
             "/usr/local/etc/nginx"
                 copy_from => purgecopy (
                     "/cf-public/gw-nginx", "$(sys.policy_hub)"

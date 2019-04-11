@@ -42,7 +42,7 @@ bundle agent collectd
                 perms => mo("644", "root"),
                 classes => if_repaired("restart_collectd");
 
-        gw_nginx::
+        gateway_nginx::
             "/usr/local/etc/collectd/nginx.conf"
                 copy_from => secure_cp (
                     "/cf-public/collectd/nginx.conf", "$(sys.policy_hub)"
@@ -93,7 +93,7 @@ bundle agent collectd
                 perms => mo("644", "root"),
                 classes => if_repaired("restart_collectd");
 
-        nodes|elastic|proxy|rabbit|redis|riak|zoo::
+        nodes|elasticsearch|haproxy|rabbitmq|redis|riak|zookeeper::
             "/usr/local/etc/collectd/nodes.conf"
                 copy_from => secure_cp (
                     "/cf-public/collectd/nodes.conf", "$(sys.policy_hub)"
@@ -101,7 +101,7 @@ bundle agent collectd
                 perms => mo("644", "root"),
                 classes => if_repaired("restart_collectd");
 
-        elastic|proxy|rabbit|redis::
+        elasticsearch|haproxy|rabbitmq|redis::
             "/usr/local/sbin/exec-munin"
                 copy_from => secure_cp (
                     "/cf-public/collectd/exec-munin", "$(sys.policy_hub)"
@@ -109,7 +109,7 @@ bundle agent collectd
                 perms => mo("755", "root"),
                 classes => if_repaired("restart_collectd");
 
-        elastic|proxy|redis::
+        elasticsearch|haproxy|redis::
             "/usr/local/etc/collectd/plugin-exec.conf"
                 copy_from => secure_cp (
                     "/cf-public/collectd/plugin-exec.conf",
@@ -118,7 +118,7 @@ bundle agent collectd
                 perms => mo("644", "root"),
                 classes => if_repaired("restart_collectd");
 
-        rabbit::
+        rabbitmq::
             "/usr/local/etc/collectd/plugin-exec-rabbitmq.conf"
                 copy_from => secure_cp (
                     "/cf-public/collectd/plugin-exec-rabbitmq.conf",
@@ -127,7 +127,7 @@ bundle agent collectd
                 perms => mo("644", "root"),
                 classes => if_repaired("restart_collectd");
 
-        elastic::
+        elasticsearch::
             "/usr/local/etc/exec-munin.conf"
                 copy_from => secure_cp (
                     "/cf-public/collectd/exec-munin.conf-elasticsearch",
@@ -136,7 +136,7 @@ bundle agent collectd
                 perms => mo("644", "root"),
                 classes => if_repaired("restart_collectd");
 
-        proxy::
+        haproxy::
             "/usr/local/etc/exec-munin.conf"
                 copy_from => secure_cp (
                     "/cf-public/collectd/exec-munin.conf-haproxy",
@@ -145,7 +145,7 @@ bundle agent collectd
                 perms => mo("644", "root"),
                 classes => if_repaired("restart_collectd");
 
-        rabbit::
+        rabbitmq::
             "/usr/local/etc/exec-munin.conf"
                 copy_from => secure_cp (
                     "/cf-public/collectd/exec-munin.conf-rabbitmq",
